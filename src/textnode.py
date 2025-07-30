@@ -8,7 +8,7 @@ class TextType(Enum):
     LINK = "link"
 
 
-class NodeType:
+class TextNode:
     def __init__(self, text, text_type, url):
         self.text = text
         self.text_type = text_type
@@ -22,7 +22,7 @@ class NodeType:
                 and self.url == node.url
             )
         except AttributeError:
-            print("ERROR: node '{node}' is not a known text node")
+            print(f"ERROR: node - '{node}' is not a known text node")
             return False
 
     def __repr__(self):

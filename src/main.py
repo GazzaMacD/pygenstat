@@ -1,5 +1,11 @@
+from textnode import TextType, TextNode
+
+
 def main():
-    print("Hello, World!")
+    test_node = TextNode(
+        "This is some anchor text", TextType["LINK"].value, "https://www.boot.dev"
+    )
+    print(test_node)
 
 
 if __name__ == "__main__":

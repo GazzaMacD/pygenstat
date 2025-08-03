@@ -29,6 +29,29 @@ class HTMLNode:
         if not self.props:
             return props
         else:
-            for k, v in self.props.values():
+            for k, v in self.props.items():
                 props += f' {k}="{v}" '
-            return props
+            return props.rstrip()
+
+    def __repr__(self) -> str:
+        if self.value:
+            return f"HTMLNode(\ntag: {self.tag}\nvalue: {self.value[:15] + '...'}\nchildren: {self.children}\nprops: {self.props_to_html()}\n)"
+        else:
+            return f"HTMLNode(\ntag: {self.tag}\nvalue: {self.value}\nchildren: {self.children}\nprops: {self.props_to_html()}\n)"
+
+
+NO_VALUE_ERROR = "init error: value is required"
+
+
+class LeafNode(HTMLNode):
+    def __init__(self, tag, value, props=None):
+        if not value:
+            raise ValueError(NO_VALUE_ERROR)
+        else:
+            super().__init__(tag, value, None, props)
+
+    def to_html(self):
+        if not self.tag:
+            return self.value
+        else:
+            return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"

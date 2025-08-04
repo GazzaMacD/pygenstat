@@ -41,6 +41,8 @@ class HTMLNode:
 
 
 NO_VALUE_ERROR = "init error: value is required"
+NO_CHILDREN_ERROR = "init error: children is required"
+NO_TAG_ERROR = "init error: tag is required"
 
 
 class LeafNode(HTMLNode):
@@ -55,3 +57,12 @@ class LeafNode(HTMLNode):
             return self.value
         else:
             return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
+
+
+class ParentNode(HTMLNode):
+    def __init__(self, tag=None, children=None, props=None):
+        if not tag:
+            raise ValueError(NO_TAG_ERROR)
+        elif not children:
+            raise ValueError(NO_CHILDREN_ERROR)
+        super().__init__(tag=tag, value=None, children=children, props=props)

@@ -8,8 +8,10 @@ NO_URL_ERROR = (
 class TextType(Enum):
     TEXT = "text"
     BOLD = "bold"
+    CODE = "code"
     ITALIC = "italic"
     LINK = "link"
+    IMAGE = "image"
 
 
 class TextNode:

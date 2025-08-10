@@ -1,6 +1,13 @@
 import unittest
 
-from textnode import TextNode, TextType, NO_URL_ERROR
+from textnode import (
+    TextNode,
+    TextType,
+    NO_URL_ERROR,
+    split_nodes_delimiter,
+    extract_markdown_images,
+    extract_markdown_links,
+)
 
 T = "This is a text node"
 B = "This is a bold node"
@@ -54,6 +61,92 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(
             str(node), "TextNode(This is a url node, TextType.LINK, https://myurl.com)"
         )
+
+
+class TestSplitNodes(unittest.TestCase):
+    def test_bold_delimiter(self):
+        text_node = TextNode("This is text with a **bold block** word", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([text_node], "**", TextType.BOLD)
+        self.assertEqual(len(new_nodes), 3)
+        self.assertEqual(new_nodes[1].text_type, TextType.BOLD)
+        self.assertEqual(new_nodes[1].text, "bold block")
+
+    def test_raises_with_invalid_bold_delimiter(self):
+        text_node = TextNode("This is text with a **bold block word", TextType.TEXT)
+        with self.assertRaises(ValueError) as ve:
+            split_nodes_delimiter([text_node], "**", TextType.BOLD)
+        self.assertEqual(
+            ve.exception.args[0], "Invalid markdown, formatted section not closed"
+        )
+
+    def test_code_delimiter(self):
+        text_node = TextNode("This is text with a `code block` word", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([text_node], "`", TextType.CODE)
+        self.assertEqual(len(new_nodes), 3)
+        self.assertEqual(new_nodes[1].text_type, TextType.CODE)
+        self.assertEqual(new_nodes[1].text, "code block")
+
+    def test_raises_with_invalid_code_delimiter(self):
+        text_node = TextNode("This is text with a `bold block word", TextType.TEXT)
+        with self.assertRaises(ValueError) as ve:
+            split_nodes_delimiter([text_node], "`", TextType.CODE)
+        self.assertEqual(
+            ve.exception.args[0], "Invalid markdown, formatted section not closed"
+        )
+
+    def test_italic_delimiter(self):
+        text_node = TextNode("This is text with an _italic block_ word", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([text_node], "_", TextType.ITALIC)
+        self.assertEqual(len(new_nodes), 3)
+        self.assertEqual(new_nodes[1].text_type, TextType.ITALIC)
+        self.assertEqual(new_nodes[1].text, "italic block")
+
+    def test_raises_with_invalid_italic_delimiter(self):
+        text_node = TextNode("This is text with a _italic block word", TextType.TEXT)
+        with self.assertRaises(ValueError) as ve:
+            split_nodes_delimiter([text_node], "_", TextType.ITALIC)
+        self.assertEqual(
+            ve.exception.args[0], "Invalid markdown, formatted section not closed"
+        )
+
+    def test_nesting_delimiter(self):
+        text_node = TextNode(
+            "This is text with an _italic block_, a **bold block** and a `code block` in it",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_delimiter(
+            split_nodes_delimiter(
+                split_nodes_delimiter([text_node], "_", TextType.ITALIC),
+                "`",
+                TextType.CODE,
+            ),
+            "**",
+            TextType.BOLD,
+        )
+        self.assertEqual(len(new_nodes), 7)
+        self.assertEqual(new_nodes[1].text, "italic block")
+        self.assertEqual(new_nodes[3].text, "bold block")
+        self.assertEqual(new_nodes[5].text, "code block")
+
+
+class TestRegexExtractionFunctions(unittest.TestCase):
+    def test_extract_images(self):
+        raw_text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+        matches = extract_markdown_images(raw_text)
+        expected = [
+            ("rick roll", "https://i.imgur.com/aKaOqIh.gif"),
+            ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg"),
+        ]
+        self.assertEqual(matches, expected)
+
+    def test_extract_links(self):
+        raw_text = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+        matches = extract_markdown_links(raw_text)
+        expected = [
+            ("to boot dev", "https://www.boot.dev"),
+            ("to youtube", "https://www.youtube.com/@bootdotdev"),
+        ]
+        self.assertEqual(matches, expected)
 
 
 if __name__ == "__main__":

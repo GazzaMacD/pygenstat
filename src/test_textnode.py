@@ -8,6 +8,7 @@ from textnode import (
     extract_markdown_images,
     extract_markdown_links,
     split_nodes_image,
+    split_nodes_link,
 )
 
 T = "This is a text node"
@@ -165,6 +166,10 @@ class TestImageSplit(unittest.TestCase):
             "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
             TextType.TEXT,
         )
+        self.img_two_link_str_node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and a [google link](https://google.com) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
 
     def test_img_split_empty(self):
         expected = [TextNode("", TextType.TEXT)]
@@ -176,14 +181,14 @@ class TestImageSplit(unittest.TestCase):
         new_nodes = split_nodes_image([self.space_str_node])
         self.assertEqual(new_nodes, expected)
 
-    def test_img_only_split_space(self):
+    def test_img_only_split(self):
         expected = [
             TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg")
         ]
         new_nodes = split_nodes_image([self.img_only_str_node])
         self.assertEqual(new_nodes, expected)
 
-    def test_img_two_only_split_space(self):
+    def test_img_two_only_split(self):
         expected = [
             TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
             TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
@@ -199,6 +204,85 @@ class TestImageSplit(unittest.TestCase):
             TextNode("second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"),
         ]
         new_nodes = split_nodes_image([self.img_two_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_img_mixed_link_split_images(self):
+        expected = [
+            TextNode("This is text with an ", TextType.TEXT),
+            TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(
+                " and a [google link](https://google.com) and another ", TextType.TEXT
+            ),
+            TextNode("second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"),
+        ]
+        new_nodes = split_nodes_image([self.img_two_link_str_node])
+        self.assertEqual(new_nodes, expected)
+
+
+class TestLinkSplit(unittest.TestCase):
+    def setUp(self):
+        self.empty_str_node = TextNode("", TextType.TEXT)
+        self.space_str_node = TextNode(" ", TextType.TEXT)
+        self.link_only_str_node = TextNode(
+            "[xlingual](https://xlingual.co.jp)", TextType.TEXT
+        )
+        self.link_two_only_str_node = TextNode(
+            "[xlingual](https://xlingual.co.jp)[google](https://google.com)",
+            TextType.TEXT,
+        )
+        self.link_two_str_node = TextNode(
+            "This is text with an [xlingual](https://xlingual.co.jp) and another [google](https://google.com)",
+            TextType.TEXT,
+        )
+        self.img_two_link_str_node = TextNode(
+            "This is text with an [xlingual](https://xlingual.co.jp) and ![image](https://i.imgur.com/zjjcJKZ.png) and another [google](https://google.com)",
+            TextType.TEXT,
+        )
+
+    def test_link_split_empty(self):
+        expected = [TextNode("", TextType.TEXT)]
+        new_nodes = split_nodes_link([self.empty_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_link_split_space(self):
+        expected = [TextNode(" ", TextType.TEXT)]
+        new_nodes = split_nodes_link([self.space_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_link_only_split(self):
+        expected = [TextNode("xlingual", TextType.LINK, "https://xlingual.co.jp")]
+        new_nodes = split_nodes_link([self.link_only_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_link_two_only_split(self):
+        expected = [
+            TextNode("xlingual", TextType.LINK, "https://xlingual.co.jp"),
+            TextNode("google", TextType.LINK, "https://google.com"),
+        ]
+        new_nodes = split_nodes_link([self.link_two_only_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_link_two_split(self):
+        expected = [
+            TextNode("This is text with an ", TextType.TEXT),
+            TextNode("xlingual", TextType.LINK, "https://xlingual.co.jp"),
+            TextNode(" and another ", TextType.TEXT),
+            TextNode("google", TextType.LINK, "https://google.com"),
+        ]
+        new_nodes = split_nodes_link([self.link_two_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_link_two_image_mixed_split(self):
+        expected = [
+            TextNode("This is text with an ", TextType.TEXT),
+            TextNode("xlingual", TextType.LINK, "https://xlingual.co.jp"),
+            TextNode(
+                " and ![image](https://i.imgur.com/zjjcJKZ.png) and another ",
+                TextType.TEXT,
+            ),
+            TextNode("google", TextType.LINK, "https://google.com"),
+        ]
+        new_nodes = split_nodes_link([self.img_two_link_str_node])
         self.assertEqual(new_nodes, expected)
 
 

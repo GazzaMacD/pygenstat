@@ -75,8 +75,52 @@ def extract_markdown_links(text):
     return matches
 
 
+def split_nodes_link(nodes_arr):
+    find_link_regex = r"(?<!!)\[[^\)]+\)"
+
+    new_nodes = []
+
+    for node in nodes_arr:
+        # No link markdown in str
+        if not node.text:
+            new_nodes.append(node)
+            return new_nodes
+        found = re.search(find_link_regex, node.text)
+        if not found:
+            new_nodes.append(node)
+            return new_nodes
+
+        # link markdown in str
+        links_removed_list = re.split(find_link_regex, node.text)
+        links_details_list = extract_markdown_links(node.text)
+
+        for i, item in enumerate(links_removed_list):
+            if not item:
+                if i + 1 == len(links_removed_list):
+                    break
+                else:
+                    link_text = links_details_list[i][0]
+                    href = links_details_list[i][1]
+                    link_node = TextNode(link_text, TextType.LINK, href)
+                    new_nodes.append(link_node)
+            else:
+                if i + 1 == len(links_removed_list):
+                    text_node = TextNode(item, TextType.TEXT)
+                    new_nodes.append(text_node)
+                else:
+                    # Add text node
+                    text_node = TextNode(item, TextType.TEXT)
+                    new_nodes.append(text_node)
+                    # Add link node
+                    link_text = links_details_list[i][0]
+                    href = links_details_list[i][1]
+                    link_node = TextNode(link_text, TextType.LINK, href)
+                    new_nodes.append(link_node)
+    return new_nodes
+
+
 def split_nodes_image(nodes_arr):
-    find_image_regex = r"!\[[^\)]+\)"
+    find_image_regex = r"[!\[]{2}[^\)]+\)"
 
     new_nodes = []
 

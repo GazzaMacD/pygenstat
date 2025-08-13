@@ -7,6 +7,7 @@ from textnode import (
     split_nodes_delimiter,
     extract_markdown_images,
     extract_markdown_links,
+    split_nodes_image,
 )
 
 T = "This is a text node"
@@ -147,6 +148,58 @@ class TestRegexExtractionFunctions(unittest.TestCase):
             ("to youtube", "https://www.youtube.com/@bootdotdev"),
         ]
         self.assertEqual(matches, expected)
+
+
+class TestImageSplit(unittest.TestCase):
+    def setUp(self):
+        self.empty_str_node = TextNode("", TextType.TEXT)
+        self.space_str_node = TextNode(" ", TextType.TEXT)
+        self.img_only_str_node = TextNode(
+            "![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)", TextType.TEXT
+        )
+        self.img_two_only_str_node = TextNode(
+            "![rick roll](https://i.imgur.com/aKaOqIh.gif)![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)",
+            TextType.TEXT,
+        )
+        self.img_two_str_node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+
+    def test_img_split_empty(self):
+        expected = [TextNode("", TextType.TEXT)]
+        new_nodes = split_nodes_image([self.empty_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_img_split_space(self):
+        expected = [TextNode(" ", TextType.TEXT)]
+        new_nodes = split_nodes_image([self.space_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_img_only_split_space(self):
+        expected = [
+            TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg")
+        ]
+        new_nodes = split_nodes_image([self.img_only_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_img_two_only_split_space(self):
+        expected = [
+            TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
+            TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+        ]
+        new_nodes = split_nodes_image([self.img_two_only_str_node])
+        self.assertEqual(new_nodes, expected)
+
+    def test_img_two_split_images(self):
+        expected = [
+            TextNode("This is text with an ", TextType.TEXT),
+            TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+            TextNode(" and another ", TextType.TEXT),
+            TextNode("second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"),
+        ]
+        new_nodes = split_nodes_image([self.img_two_str_node])
+        self.assertEqual(new_nodes, expected)
 
 
 if __name__ == "__main__":

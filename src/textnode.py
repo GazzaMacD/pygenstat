@@ -84,11 +84,11 @@ def split_nodes_link(nodes_arr):
         # No link markdown in str
         if not node.text:
             new_nodes.append(node)
-            return new_nodes
+            continue
         found = re.search(find_link_regex, node.text)
         if not found:
             new_nodes.append(node)
-            return new_nodes
+            continue
 
         # link markdown in str
         links_removed_list = re.split(find_link_regex, node.text)
@@ -128,11 +128,11 @@ def split_nodes_image(nodes_arr):
         # No image markdown in str
         if not node.text:
             new_nodes.append(node)
-            return new_nodes
+            continue
         found = re.search(find_image_regex, node.text)
         if not found:
             new_nodes.append(node)
-            return new_nodes
+            continue
 
         # Image markdown in str
         imgs_removed_list = re.split(find_image_regex, node.text)
@@ -161,3 +161,22 @@ def split_nodes_image(nodes_arr):
                     img_node = TextNode(alt_text, TextType.IMAGE, src)
                     new_nodes.append(img_node)
     return new_nodes
+
+
+def text_to_text_nodes(text):
+    text_node = TextNode(
+        text,
+        TextType.TEXT,
+    )
+    nodes = split_nodes_delimiter(
+        split_nodes_delimiter(
+            split_nodes_delimiter([text_node], "_", TextType.ITALIC),
+            "`",
+            TextType.CODE,
+        ),
+        "**",
+        TextType.BOLD,
+    )
+    nodes = split_nodes_link(nodes)
+    nodes = split_nodes_image(nodes)
+    return nodes

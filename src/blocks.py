@@ -66,6 +66,23 @@ def is_ordered_list_block(block):
     return is_ordered
 
 
+def determine_heading_number(block):
+    if block.startswith("# "):
+        return "h1"
+    elif block.startswith("## "):
+        return "h2"
+    elif block.startswith("### "):
+        return "h3"
+    elif block.startswith("#### "):
+        return "h4"
+    elif block.startswith("##### "):
+        return "h5"
+    elif block.startswith("###### "):
+        return "h6"
+    else:
+        raise Exception("Unknown heading type")
+
+
 def block_to_blocktype(block):
     if is_heading_block(block):
         return BlockType.HEADING
